@@ -1,0 +1,2 @@
+# ManagerServer
+OpenGMS Mangager Server
