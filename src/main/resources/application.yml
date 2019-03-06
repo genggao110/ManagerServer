@@ -1,0 +1,30 @@
+swagger:
+  title: Portal
+  description: Poratl API Document
+  version: 1.0.0
+  name: genggao
+  url:  http://geomodeling.njnu.edu.cn/
+  email: wangminggis@163.com
+
+spring:
+  http:
+    encoding:
+      force: true
+      charset: UTF-8
+      enabled: true
+  resources:
+    static-locations: ["classpath:/META-INF/resources/", "classpath:/resources/", "classpath:/static/", "classpath:/public/"]
+  data:
+    mongodb:
+      uri: mongodb://222.192.7.75/Task
+  profiles:
+    active: dev
+  cache:
+    type: simple
+
+book:
+  bookAuthor: xiaodawei
+  bookName: spring boot
+
+
+
