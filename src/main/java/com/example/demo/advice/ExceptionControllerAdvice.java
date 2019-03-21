@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import utils.ResultUtils;
+import com.example.demo.utils.ResultUtils;
 
 /**
  * Created by wang ming on 2019/2/18.

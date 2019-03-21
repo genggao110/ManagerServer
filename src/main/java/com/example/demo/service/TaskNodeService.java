@@ -12,6 +12,7 @@ import com.example.demo.dto.taskNode.TaskNodeFindDTO;
 import com.example.demo.dto.taskNode.TaskNodeReceiveDTO;
 import com.example.demo.enums.ResultEnum;
 import com.example.demo.exception.MyException;
+import com.example.demo.utils.MyHttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -24,7 +25,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
-import utils.MyHttpUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,6 +42,7 @@ public class TaskNodeService {
 
     @Autowired
     TaskNodeDao taskNodeDao;
+
 
     private static final Logger log = LoggerFactory.getLogger(TaskNodeService.class);
 
@@ -63,6 +64,10 @@ public class TaskNodeService {
     @CacheEvict(value = "taskNode", key = "#id")
     public void delete(String id){
         taskNodeDao.deleteById(id);
+    }
+
+    public TaskNode findTaskNodeByHost(String host, String port){
+        return taskNodeDao.findFirstByHostAndPort(host,port);
     }
 
     public List<TaskNode> list(TaskNodeFindDTO taskNodeFindDTO){
@@ -120,7 +125,7 @@ public class TaskNodeService {
         taskNodeStatusInfo.setHost(taskNodeReceiveDTO.getHost());
         taskNodeStatusInfo.setPort(taskNodeReceiveDTO.getPort());
         //测试案例所用url
-        String url = "http://" + taskNodeReceiveDTO.getHost() + ":" + taskNodeReceiveDTO.getPort() + "/json/taskStatus?pid=" + pid;
+        String url = "http://" + taskNodeReceiveDTO.getHost() + ":" + taskNodeReceiveDTO.getPort() + "/server/status?pid=" + pid;
         String result;
         try{
             result = MyHttpUtils.GET(url,"UTF-8",null);
@@ -131,8 +136,12 @@ public class TaskNodeService {
             taskNodeStatusInfo.setStatus(false);
         }else{
             JSONObject res = JSON.parseObject(result);
-            taskNodeStatusInfo.setStatus(res.getBoolean("status"));
-            taskNodeStatusInfo.setRunning(res.getIntValue("running"));
+            if(res.getIntValue("code") != 1){
+                taskNodeStatusInfo.setStatus(false);
+            }
+            JSONObject data = res.getJSONObject("data");
+            taskNodeStatusInfo.setStatus(data.getBoolean("status"));
+            taskNodeStatusInfo.setRunning(data.getIntValue("running"));
         }
         return new AsyncResult<>(taskNodeStatusInfo);
     }
@@ -179,4 +188,5 @@ public class TaskNodeService {
         }
         return geoInfoMeat;
     }
+
 }

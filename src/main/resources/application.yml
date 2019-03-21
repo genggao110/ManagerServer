@@ -21,10 +21,10 @@ spring:
     active: dev
   cache:
     type: simple
-
-book:
-  bookAuthor: xiaodawei
-  bookName: spring boot
-
+  servlet:
+    multipart:
+      max-file-size: 1000MB
+      max-request-size: 1000MB
+      location: E:/DemoData/
 
 

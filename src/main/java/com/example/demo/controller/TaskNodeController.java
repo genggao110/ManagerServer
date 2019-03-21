@@ -1,12 +1,14 @@
 package com.example.demo.controller;
 
 import com.example.demo.bean.JsonResult;
+import com.example.demo.domain.TaskNode;
 import com.example.demo.domain.support.TaskNodeStatusInfo;
 import com.example.demo.dto.taskNode.TaskNodeAddDTO;
 import com.example.demo.dto.taskNode.TaskNodeCalDTO;
 import com.example.demo.dto.taskNode.TaskNodeFindDTO;
 import com.example.demo.dto.taskNode.TaskNodeReceiveDTO;
 import com.example.demo.service.TaskNodeService;
+import com.example.demo.utils.ResultUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -14,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.WebAsyncTask;
-import utils.ResultUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,27 +37,9 @@ public class TaskNodeController {
     @Autowired
     TaskNodeService taskNodeService;
 
-
-    //测试Callable异步请求处理
-//    @RequestMapping(value = "", method = RequestMethod.POST)
-//    @ApiOperation(value = "add TaskNode")
-//    public Callable<JsonResult> callable(@RequestBody TaskNodeAddDTO taskNodeAddDTO){
-//        log.info("外部线程： " + Thread.currentThread().getName());
-//        return new Callable<JsonResult>() {
-//            @Override
-//            public JsonResult call() throws Exception {
-//                log.info("内部线程： " + Thread.currentThread().getName());
-//                if(taskNodeService.judgeTaskNode(taskNodeAddDTO.getHost(),taskNodeAddDTO.getPort())){
-//                    return ResultUtils.error(-1,"the task node has been registered");
-//                }else{
-//                    return ResultUtils.success(taskNodeService.insert(taskNodeAddDTO));
-//                }
-//            }
-//        };
-//    }
-
     //WebAsyncTask异步请求处理
     @RequestMapping(value = "", method = RequestMethod.POST)
+    @ApiOperation(value = "任务服务器向管理服务器的注册")
     public WebAsyncTask<JsonResult> asyncTask(@RequestBody TaskNodeAddDTO taskNodeAddDTO){
 
         WebAsyncTask<JsonResult> webAsyncTask = new WebAsyncTask<JsonResult>(10000, new Callable<JsonResult>() {
@@ -152,6 +135,21 @@ public class TaskNodeController {
             return ResultUtils.success();
         }
     }
+
+    @RequestMapping(value = "/unregister", method = RequestMethod.POST)
+    @ApiOperation(value = "unregister the task server")
+    JsonResult unRegister(@RequestBody TaskNodeAddDTO taskNodeAddDTO){
+        if(!taskNodeService.judgeTaskNode(taskNodeAddDTO.getHost(),taskNodeAddDTO.getPort())){
+            return ResultUtils.error(-1,"the task node has not been registered");
+        }else{
+            TaskNode taskNode = taskNodeService.findTaskNodeByHost(taskNodeAddDTO.getHost(),taskNodeAddDTO.getPort());
+            String id = taskNode.getId();
+            taskNodeService.delete(id);
+            return ResultUtils.success();
+        }
+    }
+
+
 
 
 }
