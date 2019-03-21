@@ -6,30 +6,7 @@
   </a>
 </p>
 
-<p aligin="center">
-  <a href="http://geomodeling.njnu.edu.cn/" target="_blank">
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="152" height="20">
-  <linearGradient id="b" x2="0" y2="100%">
-    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
-    <stop offset="1" stop-opacity=".1"/>
-  </linearGradient>
-  <clipPath id="a">
-    <rect width="152" height="20" rx="3" fill="#fff"/>
-  </clipPath>
-  <g clip-path="url(#a)">
-    <path fill="#555" d="M0 0h80v20H0z"/>
-    <path fill="#007ec6" d="M80 0h80v20H80z"/>
-    <path fill="url(#b)" d="M0 0h152v20H0z"/>
-  </g>
-  <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110"> 
-    <text x="400" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="500">OpenGMS</text>
-    <text x="400" y="140" transform="scale(.1)" textLength="500">OpenGMS</text>
-    <text x="1150" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="420">Official</text>
-    <text x="1150" y="140" transform="scale(.1)" textLength="420">Official</text>
-  </g> 
-</svg>
-  </a>
-</p>
+[![Travis (.org)](OpenGMS.svg)](http://geomodeling.njnu.edu.cn/)
 
 ### Introduction
 Manager Server(based on Portal) for geographical modeling, which is mainly used to help Portal Website find model service and Invoke model resources. It communicate with the task server to finish most works.
