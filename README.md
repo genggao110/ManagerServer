@@ -184,10 +184,47 @@ table `TaskNode` : for Task Server
     "code": 1,
     "msg": "suc",
     "data": {
-        "tid": "5c93513d64380f2a8c8d8b86"
+        "tid": "5c935d1464380f2a8c8d8b8b"
     }
 }
 ```
+
+#### _Refresh the task Record by tid_
+
+* URL : _/computableModel/refreshTaskRecord_
+* Method: POST
+* Form :
+```json
+{
+	"ip":"172.21.212.119",
+	"port":8061,
+	"tid":"5c935d1464380f2a8c8d8b8b"
+}
+```
+* Response :
+```json
+{
+    "code": 1,
+    "msg": "suc",
+    "data": {
+        "ip": "172.21.212.119",
+        "port": 8061,
+        "tid": "5c935d1464380f2a8c8d8b8b",
+        "pid": "faa3fa6554e822154862800961a99e51",
+        "status": 2,
+        "inputs": null,
+        "outputs": [
+            {
+                "statename": "RUNSTATE",
+                "event": "RETURNDATASET",
+                "url": "http://172.21.212.155:8062/geodata/SHtqOU1Nekl6TnpZMk5qRXpOVFkyTXpJek1ESmtNelEyTWpZeU5qVXlaRE14TXpFMk5UTTVNbVEyTVRZeE16WTJOREprTXpFek1UTTFNemN6TmpNeE5qSXpPVE0xTXprek1UWXpaeVYvRg==",
+                "tag": "RUNSTATE-RETURNDATASET"
+            }
+        ]
+    }
+}
+```
+Tag: Task Status, including `Inited`(0), `Started`(1), `Finished`(2) and `Error`(-1).
 
 ### Install Requirement
 

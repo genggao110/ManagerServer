@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.bean.JsonResult;
+import com.example.demo.dto.computableModel.TaskResultDTO;
 import com.example.demo.dto.computableModel.TaskServiceDTO;
 import com.example.demo.dto.computableModel.UploadDataDTO;
 import com.example.demo.service.ComputableService;
@@ -53,6 +54,12 @@ public class ComputableModeController {
     @ApiOperation(value = "运行模型服务，提交task任务")
     public JsonResult invokeModel(@RequestBody TaskServiceDTO taskServiceDTO){
         return ResultUtils.success(computableService.invokeModel(taskServiceDTO));
+    }
+
+    @RequestMapping(value = "/refreshTaskRecord", method = RequestMethod.POST)
+    @ApiOperation(value = "获取task运行记录信息")
+    public JsonResult refreshTaskRecord(@RequestBody TaskResultDTO taskResultDTO){
+        return ResultUtils.success(computableService.refreshRecord(taskResultDTO));
     }
 
 }

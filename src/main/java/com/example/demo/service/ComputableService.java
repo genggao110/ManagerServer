@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.example.demo.dao.ComputableModelDao;
 import com.example.demo.domain.ComputableModel;
 import com.example.demo.dto.computableModel.ExDataDTO;
+import com.example.demo.dto.computableModel.TaskResultDTO;
 import com.example.demo.dto.computableModel.TaskServiceDTO;
 import com.example.demo.dto.computableModel.UploadDataDTO;
 import com.example.demo.sdk.*;
@@ -20,10 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by wang ming on 2019/3/15.
@@ -151,6 +149,49 @@ public class ComputableService {
         return result;
     }
 
+    public TaskResultDTO refreshRecord(TaskResultDTO taskResultDTO){
+        String ip = taskResultDTO.getIp();
+        int port = taskResultDTO.getPort();
+        String tid = taskResultDTO.getTid();
+
+        String url = "http://" + ip + ":" + port + "/task/" + tid;
+
+        try{
+            String resJson = MyHttpUtils.GET(url,"UTF-8",null);
+            JSONObject jResponse = JSONObject.parseObject(resJson);
+            if(jResponse.getString("result").equals("suc")){
+                JSONObject jData = jResponse.getJSONObject("data");
+                if(jData == null){
+                    return null;
+                }
+                String taskStatus = jData.getString("t_status");
+                taskResultDTO.setStatus(convertStatus(taskStatus));
+                taskResultDTO.setPid(jData.getString("t_pid"));
+                List<ExDataDTO> outputItems = convertJSON2Items(jData.getJSONArray("t_outputs"));
+                taskResultDTO.setOutputs(outputItems);
+            }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e.getMessage());
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return taskResultDTO;
+    }
+
+    private int convertStatus(String taskStatus){
+        int status;
+        if(taskStatus.equals("Inited")){
+            status = 0;
+        }else if(taskStatus.equals("Started")){
+            status = 1; //started
+        }else if(taskStatus.equals("Finished")){
+            status = 2; //Finished
+        }else {
+            status = -1;
+        }
+        return status;
+    }
+
     private String convertItems2JSON(List<ExDataDTO> inputs){
         JSONArray resultJson = new JSONArray();
         for(ExDataDTO input: inputs){
@@ -162,6 +203,20 @@ public class ComputableService {
             resultJson.add(temp);
         }
         return resultJson.toJSONString();
+    }
+
+    private List<ExDataDTO> convertJSON2Items(JSONArray jOutputs){
+        List<ExDataDTO> outputItems = new ArrayList<>();
+        for(int i = 0; i < jOutputs.size(); i++){
+            JSONObject temp = jOutputs.getJSONObject(i);
+            ExDataDTO exDataDTO = new ExDataDTO();
+            exDataDTO.setStatename(temp.getString("StateName"));
+            exDataDTO.setEvent(temp.getString("Event"));
+            exDataDTO.setTag(temp.getString("Tag"));
+            exDataDTO.setUrl(temp.getString("Url"));
+            outputItems.add(exDataDTO);
+        }
+        return outputItems;
     }
 
 }
