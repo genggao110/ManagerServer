@@ -51,8 +51,8 @@ table `TaskNode` : for Task Server
 * Response :
 ```json
 {
-    "code": 0,
-    "msg": "成功",
+    "code": 1,
+    "msg": "suc",
     "data": {
         "id": "5c938cd1fedf28528c37d875",
         "name": "localhost",
@@ -79,8 +79,8 @@ table `TaskNode` : for Task Server
 * Response ：
 ```json
 {
-    "code": 0,
-    "msg": "成功",
+    "code": 1,
+    "msg": "suc",
     "data": {
         "id": "5c8b61ab1932413d2c24d6d1",
         "host": "172.21.212.119",
@@ -107,8 +107,8 @@ table `TaskNode` : for Task Server
 * Response:
 ```json
 {
-    "code": 0,
-    "msg": "成功",
+    "code": 1,
+    "msg": "suc",
     "data": {
         "ip": "172.21.212.119",
         "port": 8061,
@@ -148,8 +148,8 @@ table `TaskNode` : for Task Server
 * Response :
 ```json
 {
-    "code": 0,
-    "msg": "成功",
+    "code": 1,
+    "msg": "suc",
     "data": {
         "statename": null,
         "event": null,
@@ -181,8 +181,8 @@ table `TaskNode` : for Task Server
 * Response : 
 ```json
 {
-    "code": 0,
-    "msg": "成功",
+    "code": 1,
+    "msg": "suc",
     "data": {
         "tid": "5c93513d64380f2a8c8d8b86"
     }

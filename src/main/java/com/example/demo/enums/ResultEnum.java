@@ -5,8 +5,8 @@ package com.example.demo.enums;
  */
 public enum ResultEnum {
 
-    SUCCESS(0, "成功"),
-    NO_OBJECT(-1, "无响应对象");
+    SUCCESS(1, "suc"),
+    NO_OBJECT(-1, "err");
 
     private Integer code;
 
