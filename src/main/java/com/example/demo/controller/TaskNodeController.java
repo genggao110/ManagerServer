@@ -149,6 +149,44 @@ public class TaskNodeController {
         }
     }
 
+    @RequestMapping(value = "/getTaskForMicroService", method = RequestMethod.GET)
+    @ApiOperation(value = "获取task服务器上是否存在type = 1的模型容器，之后根据各个服务器的延迟信息进行计算，获取最适合部署的Task服务器")
+    JsonResult getTaskServerForMicroService(){
+        //获取到所有的taskNode
+        List<TaskNodeReceiveDTO> taskNodeList = taskNodeService.listAll();
+        //TaskNodeStatusInfo: 包含 id, host, port ,status and running count
+        List<Future<TaskNodeStatusInfo>> futures = new ArrayList<>();
+        //开启异步任务
+        taskNodeList.forEach((TaskNodeReceiveDTO obj) ->{
+            Future<TaskNodeStatusInfo> future = taskNodeService.judgeTaskNodeAboutLocal(obj);
+            futures.add(future);
+        });
+
+        //获取异步任务返回的结果
+        List<TaskNodeStatusInfo> results = new ArrayList<>();
+        futures.forEach((future) ->{
+            try{
+                TaskNodeStatusInfo taskNodeStatusInfo = future.get();
+                //进行判断
+                if(taskNodeStatusInfo != null && taskNodeStatusInfo.isStatus()){
+                    results.add(taskNodeStatusInfo);
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e.getMessage());
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        });
+
+        //TODO 根据算法进行择优选择,目前一个字段,running count, 所以排序获得就行（得分规则后面完善）
+        results.sort((o1,o2) -> Integer.compare(o1.getRunning(),o2.getRunning()));
+        if(results.size() != 0){
+            return ResultUtils.success(results.get(0));
+        }else{
+            return ResultUtils.error(-1,"No suitable task node for deploying model!");
+        }
+    }
+
 
 
 

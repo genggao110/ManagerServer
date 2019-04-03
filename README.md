@@ -226,6 +226,25 @@ table `TaskNode` : for Task Server
 ```
 Tag: Task Status, including `Inited`(0), `Started`(1), `Finished`(2) and `Error`(-1).
 
+#### _Get Suitable Task Server for Deploying the Model Package(Micro Service)_
+
+* URL : _/taskNode/getTaskForMicroService_
+* Method : GET
+* Response : 
+```json
+{
+    "code": 1,
+    "msg": "suc",
+    "data": {
+        "id": "5c8b61ab1932413d2c24d6d1",
+        "host": "172.21.212.119",
+        "port": "8061",
+        "status": true,
+        "running": 0
+    }
+}
+```
+
 ### Install Requirement
 
 - Java JDK 1.8+

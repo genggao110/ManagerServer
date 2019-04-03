@@ -26,6 +26,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -142,6 +144,40 @@ public class TaskNodeService {
             JSONObject data = res.getJSONObject("data");
             taskNodeStatusInfo.setStatus(data.getBoolean("status"));
             taskNodeStatusInfo.setRunning(data.getIntValue("running"));
+        }
+        return new AsyncResult<>(taskNodeStatusInfo);
+    }
+
+    @Async
+    public Future<TaskNodeStatusInfo> judgeTaskNodeAboutLocal(TaskNodeReceiveDTO taskNodeReceiveDTO){
+        TaskNodeStatusInfo taskNodeStatusInfo = new TaskNodeStatusInfo();
+        taskNodeStatusInfo.setId(taskNodeReceiveDTO.getId());
+        taskNodeStatusInfo.setHost(taskNodeReceiveDTO.getHost());
+        taskNodeStatusInfo.setPort(taskNodeReceiveDTO.getPort());
+        //获取可以部署节点url
+        String url = "http://" + taskNodeReceiveDTO.getHost() + ":" + taskNodeReceiveDTO.getPort() + "/server/localStatus";
+        String result = "";
+        try{
+            result = MyHttpUtils.GET(url, "UTF-8", null);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            result = null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            result = null;
+        }
+
+        if(result == null){
+            taskNodeStatusInfo.setStatus(false);
+        }else{
+            JSONObject response = JSON.parseObject(result);
+            if(response.getIntValue("code") == -1){
+                taskNodeStatusInfo.setStatus(false);
+            }else{
+                JSONObject data = response.getJSONObject("data");
+                taskNodeStatusInfo.setStatus(data.getBoolean("status"));
+                taskNodeStatusInfo.setRunning(data.getIntValue("running"));
+            }
         }
         return new AsyncResult<>(taskNodeStatusInfo);
     }

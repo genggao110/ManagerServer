@@ -26,11 +26,6 @@ public class ComputableModeController {
 
     @Autowired
     ComputableService computableService;
-    @RequestMapping(value = "", method = RequestMethod.POST)
-    @ApiOperation(value = "上传计算模型")
-    public JsonResult upload(@RequestParam("name") String name, @RequestParam("pid") String pid){
-        return ResultUtils.success(computableService.insert(name, pid));
-    }
 
     @RequestMapping(value = "/createTask", method = RequestMethod.POST)
     @ApiOperation(value = "创建taskServer,预准备过程")
