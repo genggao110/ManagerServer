@@ -95,7 +95,7 @@ public class ComputableService {
                     params.put("pwd", "true");
 
                     String actionUrl = "http://" + ip + ":" + port + "/data";
-                    String result = MyHttpUtils.POSTInputStreamToDataExServer(actionUrl,"UTF-8",params,is,filename);
+                    String result = MyHttpUtils.POSTMultiPartFileToDataExServer(actionUrl,"UTF-8",params,file,filename);
                     JSONObject jResult = JSONObject.parseObject(result);
                     if(jResult.getString("result").equals("suc")){
                         JSONObject jData = jResult.getJSONObject("data");
