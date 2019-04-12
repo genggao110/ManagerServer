@@ -298,7 +298,7 @@ public class MyHttpUtils {
         return body;
     }
 
-    public static String POSTMultiPartFileToDataExServer(String url,String encode, Map<String,String>params, MultipartFile file, String filename)throws IOException{
+    public static String POSTMultiPartFileToDataServer(String url,String encode, Map<String,String>params,Map<String,MultipartFile> fileMap)throws IOException{
         String body = "";
         CloseableHttpClient client = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(url);
@@ -312,7 +312,13 @@ public class MyHttpUtils {
                 .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
                 .setCharset(Charset.forName(encode));
 
-        builder.addBinaryBody("datafile",file.getInputStream(),ContentType.MULTIPART_FORM_DATA, filename);
+        if(fileMap != null && fileMap.size() > 0){
+            for(Map.Entry<String,MultipartFile> entry: fileMap.entrySet()){
+                MultipartFile file = entry.getValue();
+                builder.addBinaryBody(entry.getKey(),file.getInputStream(),ContentType.MULTIPART_FORM_DATA, file.getOriginalFilename());
+            }
+        }
+
 
         //构建参数部分，解决中文乱码
         ContentType contentType = ContentType.create("text/plain", Charset.forName(encode));

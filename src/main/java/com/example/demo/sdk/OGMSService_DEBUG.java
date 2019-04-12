@@ -12,8 +12,8 @@ public class OGMSService_DEBUG {
         return new Server(ip, port);
     }
 
-    public static GeoDataExServer CreateDataExchangeServer(String ip, int port){
-        GeoDataExServer dataExServer = new GeoDataExServer(ip,port);
+    public static GeoDataExServer CreateDataExchangeServer(String ip, int port, String userName){
+        GeoDataExServer dataExServer = new GeoDataExServer(ip,port,userName);
         try{
             int status = dataExServer.connect();
             if(status == 1){
@@ -36,6 +36,21 @@ public class OGMSService_DEBUG {
                 return taskServer;
             }
 
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static GeoDataServiceServer CreateDataServiceServer(String ip, int port, String userName){
+        GeoDataServiceServer dataServiceServer = new GeoDataServiceServer(ip, port, userName);
+        try{
+            int status = dataServiceServer.connect();
+            if(status == 1){
+                return dataServiceServer;
+            }
         } catch (URISyntaxException e) {
             e.printStackTrace();
         } catch (IOException e) {

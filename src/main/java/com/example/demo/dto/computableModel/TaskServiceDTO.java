@@ -19,5 +19,6 @@ public class TaskServiceDTO {
     String username;
     String ex_ip;
     int ex_port;
+    int type;
     List<ExDataDTO> inputs;
 }

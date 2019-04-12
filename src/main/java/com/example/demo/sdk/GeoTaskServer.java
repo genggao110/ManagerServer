@@ -15,7 +15,7 @@ public class GeoTaskServer extends Service {
         super(ip, port);
     }
 
-    public Task createTask(String pid, GeoDataExServer dataExServer, String userName){
+    public Task createTask(String pid, DataServer dataExServer, String userName){
         String url = this.getBaseUrl() + "server?pid=" + pid;
         try {
             String resJson = MyHttpUtils.GET(url,"UTF-8",null);
@@ -30,7 +30,12 @@ public class GeoTaskServer extends Service {
                         JSONObject data = jResult.getJSONObject("data");
                         String ds_ip = data.getString("ds_ip");
                         int ds_port = data.getIntValue("ds_port");
-                        dataExServer = new GeoDataExServer(ds_ip,ds_port);
+                        int type = data.getIntValue("type");
+                        if(type == 1){
+                            dataExServer = new GeoDataExServer(ds_ip, ds_port, userName);
+                        }else{
+                            dataExServer = new GeoDataServiceServer(ds_ip, ds_port, userName);
+                        }
                     }else {
                         return null;
                     }

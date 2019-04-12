@@ -13,13 +13,30 @@ import java.util.Map;
 /**
  * Created by wang ming on 2019/3/20.
  */
-public class GeoDataExServer extends Service {
+public class GeoDataExServer extends Service implements DataServer {
 
-    public GeoDataExServer(String ip, int port) {
+    private String userName;
+    private int type;
+    public GeoDataExServer(String ip, int port, String userName) {
         super(ip, port);
+        this.userName = userName;
+        this.type = 1;
     }
 
-    public ExData upload(String dataPath, String tag) throws IOException, URISyntaxException, DecoderException {
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    @Override
+    public Data upload(String dataPath, String tag) throws IOException, URISyntaxException, DecoderException {
         String md5 = MyFileUtils.getMD5(dataPath);
         String path = "data?md5=" + md5;
         String url = this.getBaseUrl() + path;

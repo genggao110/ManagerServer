@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class UploadDataDTO {
     String host;
     int port;
-    String tag;
+    int type; //数据服务容器所代表的类型，1 - DataExchange Server, 2 - DataService server
+    String userName;
     MultipartFile file;
 }

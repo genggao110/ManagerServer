@@ -51,9 +51,15 @@ public class ComputableService {
         String username = taskServiceDTO.getUsername();
         GeoTaskServer taskServer = OGMSService_DEBUG.CreateTaskServer(ip, port);
         Task task;
-        if(taskServiceDTO.getEx_ip() != null){
-            GeoDataExServer dataExServer = OGMSService_DEBUG.CreateDataExchangeServer(taskServiceDTO.getEx_ip(),taskServiceDTO.getEx_port());
-            task = taskServer.createTask(pid,dataExServer,username);
+        //type value contains: 1 - DataExchangeServer, 2 - DataServiceServer
+        if(taskServiceDTO.getEx_ip() != null && taskServiceDTO.getType() != 0){
+            if(taskServiceDTO.getType() == 1){
+                GeoDataExServer dataExServer = OGMSService_DEBUG.CreateDataExchangeServer(taskServiceDTO.getEx_ip(),taskServiceDTO.getEx_port(),username);
+                task = taskServer.createTask(pid,dataExServer,username);
+            }else{
+                GeoDataServiceServer dataServiceServer = OGMSService_DEBUG.CreateDataServiceServer(taskServiceDTO.getEx_ip(),taskServiceDTO.getEx_port(),username);
+                task = taskServer.createTask(pid,dataServiceServer,username);
+            }
         }else{
             task = taskServer.createTask(pid,null,username);
         }
@@ -61,14 +67,25 @@ public class ComputableService {
     }
 
     public ExDataDTO uploadData(UploadDataDTO uploadDataDTO){
+        int type = uploadDataDTO.getType();
         MultipartFile file = uploadDataDTO.getFile();
         String filename = file.getOriginalFilename();
         String filenameWithoutExt = filename.substring(0,filename.lastIndexOf("."));
+        String ext = filename.substring(filename.lastIndexOf(".") + 1, filename.length());
         String ip = uploadDataDTO.getHost();
         int port = uploadDataDTO.getPort();
-        String tag = uploadDataDTO.getTag();
-        if(tag.equals(""))
-            tag = filenameWithoutExt;
+        String userName = uploadDataDTO.getUserName();
+        ExDataDTO exDataDTO = null;
+        if(type == 1){
+            exDataDTO = uploadDataToExServer(file,ip,port,filename);
+        }else if(type == 2){
+            exDataDTO = uploadDataToDCServer(file,ip,port,filenameWithoutExt,ext,userName);
+        }
+        return exDataDTO;
+    }
+
+    //上传数据到数据交换服务器
+    private ExDataDTO uploadDataToExServer(MultipartFile file,String ip, int port, String tag){
         ExDataDTO exDataDTO = new ExDataDTO();
         try {
             InputStream is = file.getInputStream();
@@ -95,7 +112,9 @@ public class ComputableService {
                     params.put("pwd", "true");
 
                     String actionUrl = "http://" + ip + ":" + port + "/data";
-                    String result = MyHttpUtils.POSTMultiPartFileToDataExServer(actionUrl,"UTF-8",params,file,filename);
+                    Map<String,MultipartFile> fileMap = new HashMap<>();
+                    fileMap.put("datafile",file);
+                    String result = MyHttpUtils.POSTMultiPartFileToDataServer(actionUrl,"UTF-8",params,fileMap);
                     JSONObject jResult = JSONObject.parseObject(result);
                     if(jResult.getString("result").equals("suc")){
                         JSONObject jData = jResult.getJSONObject("data");
@@ -115,6 +134,41 @@ public class ComputableService {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e.getMessage());
         } catch (DecoderException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return null;
+    }
+
+    //上传数据到数据服务容器
+    private ExDataDTO uploadDataToDCServer(MultipartFile file, String ip, int port, String fileName, String ext, String userName){
+        ExDataDTO exDataDTO = new ExDataDTO();
+        try{
+            String url = "http://" + ip + ":" + port + "/file/upload/store_dataResource_files";
+            Map<String,MultipartFile> fileMap = new HashMap<>();
+            fileMap.put("file",file);
+            String result = MyHttpUtils.POSTMultiPartFileToDataServer(url,"UTF-8",null,fileMap);
+            JSONObject jResponse = JSONObject.parseObject(result);
+            if(jResponse.getIntValue("code") == 0){
+                String dataId = jResponse.getString("data");
+                //拼接post请求
+                String dataUrl = "http://" + ip + ":" + port + "/dataResource";
+                JSONObject formData = new JSONObject();
+                formData.put("author", userName);
+                formData.put("fileName", fileName);
+                formData.put("sourceStoreId", dataId);
+                formData.put("suffix", ext);
+                formData.put("type", "OTHER");
+
+                String result2 = MyHttpUtils.POSTWithJSON(dataUrl,"UTF-8",null,formData);
+                JSONObject jResult = JSONObject.parseObject(result2);
+                if(jResult.getIntValue("code") == 0){
+                    DCData tempData = new DCData(ip,port,dataId);
+                    exDataDTO.setTag(fileName);
+                    exDataDTO.setUrl(tempData.getURL());
+                    return exDataDTO;
+                }
+            }
+        } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
         return null;

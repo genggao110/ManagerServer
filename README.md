@@ -112,10 +112,12 @@ table `TaskNode` : for Task Server
     "data": {
         "ip": "172.21.212.119",
         "port": 8061,
-        "pid": "faa3fa6554e822154862800961a99e51",
+        "pid": "51c650cd6320c08b54a71a0efa7b7d8a",
         "dxServer": {
-            "ip": "172.21.212.155",
-            "port": 8062
+            "ip": "172.21.213.194",
+            "port": 8081,
+            "userName": "wangming",
+            "type": 2
         },
         "inputData": {
             "items": [],
@@ -142,7 +144,8 @@ table `TaskNode` : for Task Server
 | ----- |----- | 
 |  host  | 172.21.212.155 |
 |  port  | 8062 |
-|  tag   | input |
+|  type   | 1 |
+|  userName  | wangming |
 |  file  | data11.fds |
 
 * Response :

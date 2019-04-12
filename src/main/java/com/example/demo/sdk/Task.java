@@ -14,14 +14,14 @@ import java.net.URISyntaxException;
 public class Task extends Service {
 
     private String pid;
-    private GeoDataExServer dxServer;
+    private DataServer dxServer;
     private ExDataConfiguration inputData;
     private ExDataConfiguration outputData;
     private String username;
     private String tid;
     private TaskStatus status;
 
-    public Task(String ip, int port, String pid, GeoDataExServer dxServer, String username) {
+    public Task(String ip, int port, String pid, DataServer dxServer, String username) {
         super(ip, port);
         this.pid = pid;
         this.dxServer = dxServer;
@@ -32,7 +32,7 @@ public class Task extends Service {
         this.status = null;
     }
 
-    public Task(String ip, int port, String pid, GeoDataExServer dxServer, ExDataConfiguration inputData, ExDataConfiguration outputData, String username, String tid, TaskStatus status) {
+    public Task(String ip, int port, String pid, DataServer dxServer, ExDataConfiguration inputData, ExDataConfiguration outputData, String username, String tid, TaskStatus status) {
         super(ip, port);
         this.pid = pid;
         this.dxServer = dxServer;
@@ -51,11 +51,11 @@ public class Task extends Service {
         this.pid = pid;
     }
 
-    public GeoDataExServer getDxServer() {
+    public DataServer getDxServer() {
         return dxServer;
     }
 
-    public void setDxServer(GeoDataExServer dxServer) {
+    public void setDxServer(DataServer dxServer) {
         this.dxServer = dxServer;
     }
 
@@ -96,7 +96,7 @@ public class Task extends Service {
 
     public int configInputData(String stateName, String event, String dataPath, String tag){
         try{
-            ExData exData = this.dxServer.upload(dataPath, tag);
+            Data exData = this.dxServer.upload(dataPath, tag);
             String url = exData.getURL();
             this.inputData.insertData(stateName,event,url,tag);
             return 1;
