@@ -54,7 +54,11 @@ public class ComputableModeController {
     @RequestMapping(value = "/refreshTaskRecord", method = RequestMethod.POST)
     @ApiOperation(value = "获取task运行记录信息")
     public JsonResult refreshTaskRecord(@RequestBody TaskResultDTO taskResultDTO){
-        return ResultUtils.success(computableService.refreshRecord(taskResultDTO));
+        TaskResultDTO temp = computableService.refreshRecord(taskResultDTO);
+        if (temp == null){
+            return ResultUtils.error(-1,"任务服务器出错");
+        }
+        return ResultUtils.success(temp);
     }
 
 }

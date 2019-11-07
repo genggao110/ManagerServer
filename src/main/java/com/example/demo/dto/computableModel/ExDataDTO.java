@@ -15,4 +15,5 @@ public class ExDataDTO {
     String event;
     String url;
     String tag;
+    String suffix;
 }

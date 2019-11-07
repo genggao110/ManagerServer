@@ -77,15 +77,25 @@ public class ComputableService {
         String userName = uploadDataDTO.getUserName();
         ExDataDTO exDataDTO = null;
         if(type == 1){
-            exDataDTO = uploadDataToExServer(file,ip,port,filename);
+            exDataDTO = uploadDataToExServer(file,ip,port,filename,ext);
         }else if(type == 2){
             exDataDTO = uploadDataToDCServer(file,ip,port,filenameWithoutExt,ext,userName);
         }
         return exDataDTO;
     }
 
-    //上传数据到数据交换服务器
-    private ExDataDTO uploadDataToExServer(MultipartFile file,String ip, int port, String tag){
+    /**
+     * 上传数据到数据交换服务器
+     * modified by wangming at 2019.11.07: 修改上传的函数参数，添加了文件后缀
+     * @param file
+     * @param ip
+     * @param port
+     * @param tag
+     * @return com.example.demo.dto.computableModel.ExDataDTO
+     * @author wangming
+     * @date 2019/11/7 10:01
+     */
+    private ExDataDTO uploadDataToExServer(MultipartFile file,String ip, int port, String tag, String ext){
         ExDataDTO exDataDTO = new ExDataDTO();
         try {
             InputStream is = file.getInputStream();
@@ -103,6 +113,7 @@ public class ComputableService {
                     ExData tempData = new ExData(ip,port,id,pwd);
                     exDataDTO.setTag(tag);
                     exDataDTO.setUrl(tempData.getURL());
+                    exDataDTO.setSuffix(ext);
                     is.close();
                     return exDataDTO;
                 }else{
@@ -124,6 +135,7 @@ public class ComputableService {
                         ExData tempData = new ExData(ip,port,id,pwd);
                         exDataDTO.setTag(tag);
                         exDataDTO.setUrl(tempData.getURL());
+                        exDataDTO.setSuffix(ext);
                         is.close();
                         return exDataDTO;
                     }
@@ -139,7 +151,19 @@ public class ComputableService {
         return null;
     }
 
-    //上传数据到数据服务容器
+    /**
+     * 上传数据到数据服务容器
+     * modified by wangming at 2019.11.07: 修改了返回的数据内容
+     * @param file
+     * @param ip
+     * @param port
+     * @param fileName
+     * @param ext
+     * @param userName
+     * @return com.example.demo.dto.computableModel.ExDataDTO
+     * @author wangming
+     * @date 2019/11/7 10:03
+     */
     private ExDataDTO uploadDataToDCServer(MultipartFile file, String ip, int port, String fileName, String ext, String userName){
         ExDataDTO exDataDTO = new ExDataDTO();
         try{
@@ -149,7 +173,8 @@ public class ComputableService {
             String result = MyHttpUtils.POSTMultiPartFileToDataServer(url,"UTF-8",null,fileMap);
             JSONObject jResponse = JSONObject.parseObject(result);
             if(jResponse.getIntValue("code") == 0){
-                String dataId = jResponse.getString("data");
+                JSONObject dataObject = jResponse.getJSONObject("data");
+                String dataId = dataObject.getString("source_store_id");
                 //拼接post请求
                 String dataUrl = "http://" + ip + ":" + port + "/dataResource";
                 JSONObject formData = new JSONObject();
@@ -158,6 +183,7 @@ public class ComputableService {
                 formData.put("sourceStoreId", dataId);
                 formData.put("suffix", ext);
                 formData.put("type", "OTHER");
+                formData.put("fromWhere","MODELCONTAINER");
 
                 String result2 = MyHttpUtils.POSTWithJSON(dataUrl,"UTF-8",null,formData);
                 JSONObject jResult = JSONObject.parseObject(result2);
@@ -165,6 +191,7 @@ public class ComputableService {
                     DCData tempData = new DCData(ip,port,dataId);
                     exDataDTO.setTag(fileName);
                     exDataDTO.setUrl(tempData.getURL());
+                    exDataDTO.setSuffix(ext);
                     return exDataDTO;
                 }
             }
@@ -223,6 +250,8 @@ public class ComputableService {
                 taskResultDTO.setPid(jData.getString("t_pid"));
                 List<ExDataDTO> outputItems = convertJSON2Items(jData.getJSONArray("t_outputs"));
                 taskResultDTO.setOutputs(outputItems);
+            }else{
+                return null;
             }
         } catch (URISyntaxException e) {
             throw new RuntimeException(e.getMessage());
@@ -254,6 +283,7 @@ public class ComputableService {
             temp.put("Event", input.getEvent());
             temp.put("Url", input.getUrl());
             temp.put("Tag", input.getTag());
+            temp.put("Suffix",input.getSuffix());
             resultJson.add(temp);
         }
         return resultJson.toJSONString();
@@ -268,6 +298,7 @@ public class ComputableService {
             exDataDTO.setEvent(temp.getString("Event"));
             exDataDTO.setTag(temp.getString("Tag"));
             exDataDTO.setUrl(temp.getString("Url"));
+            exDataDTO.setSuffix(temp.getString("Suffix"));
             outputItems.add(exDataDTO);
         }
         return outputItems;
