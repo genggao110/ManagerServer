@@ -110,7 +110,7 @@ public class Task extends Service {
         if(this.tid.equals("")){
             return -1;
         }
-        String url_origin = this.getBaseUrl() + "/task/" + this.tid;
+        String url_origin = this.getBaseUrl() + "task/" + this.tid;
         String response = MyHttpUtils.GET(url_origin, "UTF-8",null);
         JSONObject jResponse = JSONObject.parseObject(response);
         if(jResponse.getString("result").equals("suc")){
