@@ -5,5 +5,5 @@ package com.example.demo.sdk;
  */
 public interface DataServer {
 
-    public Data upload(String dataPath, String tag)throws Exception;
+    Data upload(String dataPath, String tag)throws Exception;
 }

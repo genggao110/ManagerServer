@@ -7,7 +7,7 @@ import java.io.IOException;
  */
 public interface Data {
 
-    public String getURL();
+    String getURL();
 
-    public int download(String filePath)throws IOException;
+    int download(String filePath)throws IOException;
 }
