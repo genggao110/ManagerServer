@@ -1,18 +1,24 @@
 package com.example.demo.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.example.demo.bean.JsonResult;
 import com.example.demo.dto.computableModel.TaskResultDTO;
 import com.example.demo.dto.computableModel.TaskServiceDTO;
+import com.example.demo.dto.computableModel.TaskSubmitDTO;
 import com.example.demo.dto.computableModel.UploadDataDTO;
 import com.example.demo.service.ComputableService;
 import com.example.demo.utils.ResultUtils;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
 
 /**
  * Created by wang ming on 2019/2/26.
@@ -59,6 +65,25 @@ public class ComputableModeController {
             return ResultUtils.error(-1,"任务服务器出错");
         }
         return ResultUtils.success(temp);
+    }
+
+    @RequestMapping(value = "/submitTask", method = RequestMethod.POST)
+    @ApiImplicitParam(paramType = "body", dataType = "TaskSubmitDTO", name = "taskSubmitDTO", value = "任务提交实体", required = true)
+    @ApiOperation(value = "用户提交模型pid，直接运行模型")
+    public JsonResult submitTask(@Valid @RequestBody TaskSubmitDTO taskSubmitDTO){
+        //首先根据pid找到最适合的Task-Server节点
+        JSONObject result = computableService.submitTask(taskSubmitDTO);
+        if (result == null){
+            return ResultUtils.error(-1,"找不到可用的地理模型服务运行");
+        }else{
+            return ResultUtils.success(result);
+        }
+    }
+
+    @RequestMapping(value = "verify/{pid}",method = RequestMethod.GET)
+    @ApiOperation(value = "根据pid来验证是否存在可用的地理模型服务")
+    public JsonResult verifyTask(@PathVariable("pid") String pid){
+        return ResultUtils.success(computableService.verifyTask(pid));
     }
 
 }

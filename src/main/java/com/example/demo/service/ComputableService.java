@@ -4,10 +4,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.example.demo.dao.ComputableModelDao;
 import com.example.demo.domain.ComputableModel;
-import com.example.demo.dto.computableModel.ExDataDTO;
-import com.example.demo.dto.computableModel.TaskResultDTO;
-import com.example.demo.dto.computableModel.TaskServiceDTO;
-import com.example.demo.dto.computableModel.UploadDataDTO;
+import com.example.demo.domain.support.TaskNodeStatusInfo;
+import com.example.demo.dto.computableModel.*;
+import com.example.demo.dto.taskNode.TaskNodeReceiveDTO;
 import com.example.demo.sdk.*;
 import com.example.demo.utils.MyFileUtils;
 import com.example.demo.utils.MyHttpUtils;
@@ -22,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * Created by wang ming on 2019/3/15.
@@ -31,6 +32,9 @@ public class ComputableService {
 
     @Autowired
     ComputableModelDao computableModelDao;
+
+    @Autowired
+    TaskNodeService taskNodeService;
 
     private static final Logger log = LoggerFactory.getLogger(ComputableService.class);
 
@@ -259,6 +263,62 @@ public class ComputableService {
             throw new RuntimeException(e.getMessage());
         }
         return taskResultDTO;
+    }
+
+    public boolean verifyTask(String pid){
+        List<TaskNodeStatusInfo> result = getSuitableTaskNode(pid);
+        if (result.size() == 0) {
+            return false;
+        }else {
+            return true;
+        }
+    }
+
+    //代码重构，将公用模块抽出来成为一个方法
+    public List<TaskNodeStatusInfo> getSuitableTaskNode(String pid){
+        List<TaskNodeStatusInfo> result = new ArrayList<>();
+        List<TaskNodeReceiveDTO> taskNodeList = taskNodeService.listAll();
+        List<Future<TaskNodeStatusInfo>> futures = new ArrayList<>();
+        //开启异步任务
+        taskNodeList.forEach((TaskNodeReceiveDTO obj) ->{
+            Future<TaskNodeStatusInfo> future = taskNodeService.judgeTaskNodeByPid(obj,pid);
+            futures.add(future);
+        });
+        futures.forEach((future) ->{
+            try {
+                TaskNodeStatusInfo taskNodeStatusInfo = (TaskNodeStatusInfo)future.get();
+                //判断
+                if(taskNodeStatusInfo != null && taskNodeStatusInfo.isStatus()){
+                    result.add(taskNodeStatusInfo);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        });
+        return result;
+    }
+
+    public JSONObject submitTask(TaskSubmitDTO taskSubmitDTO){
+        String pid = taskSubmitDTO.getPid();
+        List<TaskNodeStatusInfo> response = getSuitableTaskNode(pid);
+        //TODO 根据算法进行择优选择,目前一个字段,所以排序获得就行（得分规则后面完善）
+        response.sort(Comparator.comparingInt(TaskNodeStatusInfo::getRunning));
+        TaskNodeStatusInfo taskNodeStatusInfo;
+        if(response.size() != 0){
+            taskNodeStatusInfo = response.get(0);
+            TaskServiceDTO taskServiceDTO = new TaskServiceDTO();
+            taskServiceDTO.setIp(taskNodeStatusInfo.getHost());
+            taskServiceDTO.setPort(Integer.parseInt(taskNodeStatusInfo.getPort()));
+            taskServiceDTO.setPid(pid);
+            taskServiceDTO.setUsername(taskSubmitDTO.getUserName());
+            taskServiceDTO.setInputs(taskSubmitDTO.getInputs());
+            JSONObject result = invokeModel(taskServiceDTO);
+            return result;
+        }else{
+            return null;
+        }
     }
 
     private int convertStatus(String taskStatus){
