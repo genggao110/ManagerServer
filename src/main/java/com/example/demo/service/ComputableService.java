@@ -7,6 +7,8 @@ import com.example.demo.domain.ComputableModel;
 import com.example.demo.domain.support.TaskNodeStatusInfo;
 import com.example.demo.dto.computableModel.*;
 import com.example.demo.dto.taskNode.TaskNodeReceiveDTO;
+import com.example.demo.enums.ResultEnum;
+import com.example.demo.exception.MyException;
 import com.example.demo.sdk.*;
 import com.example.demo.utils.MyFileUtils;
 import com.example.demo.utils.MyHttpUtils;
@@ -72,18 +74,20 @@ public class ComputableService {
 
     public ExDataDTO uploadData(UploadDataDTO uploadDataDTO){
         int type = uploadDataDTO.getType();
-        MultipartFile file = uploadDataDTO.getFile();
-        String filename = file.getOriginalFilename();
+        MultipartFile[] file = uploadDataDTO.getFile();
+        List<MultipartFile> fileList = Arrays.asList(file);
+        String filename = uploadDataDTO.getFileName();
         String filenameWithoutExt = filename.substring(0,filename.lastIndexOf("."));
         String ext = filename.substring(filename.lastIndexOf(".") + 1, filename.length());
         String ip = uploadDataDTO.getHost();
         int port = uploadDataDTO.getPort();
-        String userName = uploadDataDTO.getUserName();
+        String userId = uploadDataDTO.getUserId();
         ExDataDTO exDataDTO = null;
         if(type == 1){
-            exDataDTO = uploadDataToExServer(file,ip,port,filename,ext);
+            //数据交换服务器默认只能上传第一个文件
+            exDataDTO = uploadDataToExServer(file[0],ip,port,filename,ext);
         }else if(type == 2){
-            exDataDTO = uploadDataToDCServer(file,ip,port,filenameWithoutExt,ext,userName);
+            exDataDTO = uploadDataToDCServer_Update(fileList,ip,port,filenameWithoutExt,ext,userId);
         }
         return exDataDTO;
     }
@@ -205,6 +209,47 @@ public class ComputableService {
         return null;
     }
 
+    /**
+     * TODO 处理新版数据容器接口
+     * @param fileList
+     * @param ip
+     * @param port
+     * @param fileName
+     * @param ext
+     * @param userId
+     * @return com.example.demo.dto.computableModel.ExDataDTO
+     * @author wangming
+     * @date 2020/1/4 21:48
+     */
+    private ExDataDTO uploadDataToDCServer_Update(List<MultipartFile> fileList, String ip, int port,String fileName,String ext,String userId){
+        //根据不同的类型，选择不同的上传url
+        ExDataDTO exDataDTO = new ExDataDTO();
+        try{
+            String url = "http://" + ip + ":" + port + "/data";
+            Map<String,String> params = new HashMap<>();
+            params.put("name", fileName);
+            params.put("userId",userId);
+            //目前服务节点默认设置为china
+            params.put("serverNode","china");
+            params.put("origination","portal");
+            String result = MyHttpUtils.PostToNewDataContainer(url,"UTF-8",null,params,fileList);
+            JSONObject jResponse = JSONObject.parseObject(result);
+            if (jResponse.getIntValue("code") == 0){
+                JSONObject dataObject = jResponse.getJSONObject("data");
+                String dataId = dataObject.getString("source_store_id");
+                DCData tempData = new DCData(ip, port,dataId);
+                exDataDTO.setTag(fileName);
+                exDataDTO.setUrl(tempData.getURL());
+                exDataDTO.setSuffix(ext);
+                return exDataDTO;
+            }
+
+        }catch (Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
+        return null;
+    }
+
     public JSONObject invokeModel(TaskServiceDTO taskServiceDTO){
         //利用taskServiceDTO拼凑提交任务的form表单，从而提交任务
         String ip = taskServiceDTO.getIp();
@@ -212,11 +257,14 @@ public class ComputableService {
         String pid = taskServiceDTO.getPid();
         String username = taskServiceDTO.getUsername();
         List<ExDataDTO> inputs = taskServiceDTO.getInputs();
+        List<OutputDataDTO> outputs = taskServiceDTO.getOutputs();
         JSONObject params = new JSONObject();
         String inputsArray = convertItems2JSON(inputs);
+        String outputsArray = convertOutputItems2JSON(outputs);
         params.put("inputs", inputsArray);
         params.put("username",username);
         params.put("pid", pid);
+        params.put("outputs", outputsArray);
 
         String actionUrl = "http://" + ip + ":" + port + "/task";
         JSONObject result = new JSONObject();
@@ -226,6 +274,9 @@ public class ComputableService {
             JSONObject jResponse = JSONObject.parseObject(resJson);
             if(jResponse.getString("result").equals("suc")){
                 String tid = jResponse.getString("data");
+                if(tid.equals("")){
+                    throw new MyException(ResultEnum.NO_OBJECT);
+                }
                 result.put("tid",tid);
             }
         }catch (IOException e){
@@ -344,6 +395,19 @@ public class ComputableService {
             temp.put("Url", input.getUrl());
             temp.put("Tag", input.getTag());
             temp.put("Suffix",input.getSuffix());
+            resultJson.add(temp);
+        }
+        return resultJson.toJSONString();
+    }
+
+    private String convertOutputItems2JSON(List<OutputDataDTO> outputs){
+        JSONArray resultJson = new JSONArray();
+        for(OutputDataDTO output:outputs){
+            JSONObject temp = new JSONObject();
+            temp.put("StateName",output.getStatename());
+            temp.put("Event", output.getEvent());
+            temp.put("Type",output.getTemplate().getType());
+            temp.put("Value",output.getTemplate().getValue());
             resultJson.add(temp);
         }
         return resultJson.toJSONString();

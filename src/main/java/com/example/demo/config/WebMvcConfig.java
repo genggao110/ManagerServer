@@ -60,7 +60,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     //处理callable超时
     @Override
     public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
-        configurer.setDefaultTimeout(10*1000);
+        configurer.setDefaultTimeout(10*1000L);
         configurer.registerCallableInterceptors(timeoutInterceptor());
         configurer.setTaskExecutor(getAsyncThreadPoolTaskExecutor());
     }

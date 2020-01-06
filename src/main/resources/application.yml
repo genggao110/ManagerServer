@@ -26,5 +26,10 @@ spring:
       max-file-size: 1000MB
       max-request-size: 1000MB
       location: E:/DemoData/
+  mvc:
+    static-path-pattern: /**
+
+prop:
+  upload-folder: D:/portal/DemoData/
 
 

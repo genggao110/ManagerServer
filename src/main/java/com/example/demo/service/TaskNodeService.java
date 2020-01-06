@@ -148,7 +148,7 @@ public class TaskNodeService {
         return new AsyncResult<>(taskNodeStatusInfo);
     }
 
-    @Async
+    @Async("taskExecutor")
     public Future<TaskNodeStatusInfo> judgeTaskNodeAboutLocal(TaskNodeReceiveDTO taskNodeReceiveDTO){
         TaskNodeStatusInfo taskNodeStatusInfo = new TaskNodeStatusInfo();
         taskNodeStatusInfo.setId(taskNodeReceiveDTO.getId());

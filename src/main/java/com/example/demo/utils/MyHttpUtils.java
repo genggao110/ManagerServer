@@ -252,6 +252,64 @@ public class MyHttpUtils {
 
     }
 
+    public static String PostToNewDataContainer(String url, String encode, Map<String, String> headers, Map<String, String> params, List<MultipartFile> multipartFiles,
+                              String... m)throws IOException{
+        String body = "";
+        CloseableHttpClient client = checkAuth(m);
+        if(client == null){
+            return "Input Auth parameter error";
+        }
+
+        HttpPost httppost = new HttpPost(url);
+
+        //设置连接超时时间
+        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(CONNECT_TIMEOUT).setSocketTimeout(SOCKET_TIMEOUT).build();
+        httppost.setConfig(requestConfig);
+
+        //设置header
+        if(headers != null && headers.size() > 0){
+            for(Map.Entry<String, String> entry : headers.entrySet()){
+                httppost.setHeader(entry.getKey(), entry.getValue());
+            }
+        }
+
+        //构建body部分
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create()
+                .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+                .setCharset(Charset.forName(encode));
+
+        //文件数据
+        if (multipartFiles != null && multipartFiles.size() > 0){
+            for(MultipartFile multipartFile : multipartFiles){
+                builder.addBinaryBody("ogmsdata", multipartFile.getInputStream(), ContentType.MULTIPART_FORM_DATA, multipartFile.getOriginalFilename());
+            }
+        }
+
+        //参数数据,解决中文乱码
+        ContentType contentType = ContentType.create("text/plain", Charset.forName(encode));
+        if(params != null && params.size() > 0){
+            for(Map.Entry<String, String> key: params.entrySet()){
+                builder.addTextBody(key.getKey(), key.getValue(), contentType);
+            }
+        }
+
+        HttpEntity entityIn = builder.build();
+        //设置参数到请求参数中
+        httppost.setEntity(entityIn);
+
+        CloseableHttpResponse response = client.execute(httppost);
+        HttpEntity entityOut = response.getEntity();
+        if (entityOut != null) {
+            //按指定编码转换结果实体为String类型
+            body = EntityUtils.toString(entityOut, encode);
+        }
+        EntityUtils.consume(entityOut);
+        //释放链接
+        response.close();
+        client.close();
+        return body;
+    }
+
     public static String POSTFile(String url, String encode, Map<String,String>params, Map<String,String> fileMap) throws IOException {
         String body = "";
         CloseableHttpClient client = HttpClients.createDefault();

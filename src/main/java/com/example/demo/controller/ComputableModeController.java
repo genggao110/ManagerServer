@@ -42,8 +42,8 @@ public class ComputableModeController {
     @RequestMapping(value = "/uploadData", method = RequestMethod.POST)
     @ApiOperation(value = "上传模型运行数据")
     public JsonResult uploadData(UploadDataDTO uploadDataDTO){
-        MultipartFile file = uploadDataDTO.getFile();
-        if(!file.isEmpty()){
+        MultipartFile[] file = uploadDataDTO.getFile();
+        if(file.length > 0){
             return ResultUtils.success(computableService.uploadData(uploadDataDTO));
         }else{
             return ResultUtils.error(-1,"上传文件为空");
