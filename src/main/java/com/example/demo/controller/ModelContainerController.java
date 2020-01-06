@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 /**
@@ -66,7 +67,7 @@ public class ModelContainerController {
 
     @RequestMapping(value = "/download/{id}", method = RequestMethod.GET)
     @ApiOperation(value = "根据id下载对应版本的模型服务容器")
-    public ResponseEntity<InputStreamResource> download(@PathVariable String id){
+    public ResponseEntity<InputStreamResource> download(@PathVariable String id) throws UnsupportedEncodingException {
         String path = modelContainerService.findFilePathById(id);
         if(path == null){
             return null;
@@ -75,7 +76,7 @@ public class ModelContainerController {
         InputStream inputStream = MyFileUtils.getInputStream(file);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        headers.add("Content-Disposition", "attachment;filename=" + file.getName());
+        headers.add("Content-Disposition", "attachment;filename=" + new String(file.getName().getBytes("UTF-8"),"ISO8859-1"));
         headers.add("Pragma", "no-cache");
         headers.add("Expires", "0");
 

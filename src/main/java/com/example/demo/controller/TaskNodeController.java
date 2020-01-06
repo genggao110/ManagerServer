@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.example.demo.bean.JsonResult;
 import com.example.demo.domain.TaskNode;
 import com.example.demo.domain.support.TaskNodeStatusInfo;
@@ -11,14 +12,18 @@ import com.example.demo.service.TaskNodeService;
 import com.example.demo.utils.ResultUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import netscape.javascript.JSObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -187,6 +192,29 @@ public class TaskNodeController {
         }
     }
 
+    @RequestMapping(value = "/getAllServices", method = RequestMethod.GET)
+    @ApiOperation(value = "获取到所有可用的模型服务")
+    JsonResult getAllModelService(){
+        List<TaskNodeReceiveDTO> taskNodeReceiveDTOList = taskNodeService.listAll();
+        Set<JSONObject> result = new TreeSet<>();
+        List<Future<List<JSONObject>>> futures = new ArrayList<>();
+        //开启异步任务
+        taskNodeReceiveDTOList.forEach((taskNodeReceiveDTO -> {
+            Future<List<JSONObject>> future = taskNodeService.getAllServiceByTaskNode(taskNodeReceiveDTO);
+            futures.add(future);
+        }));
+        futures.forEach((future) ->{
+            try {
+                List<JSONObject> serviceList = (List<JSONObject>) future.get();
+                result.addAll(serviceList);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        });
+        return ResultUtils.success(result);
+    }
 
 
 

@@ -1,10 +1,13 @@
 package com.example.demo.service;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.example.demo.dao.TaskNodeDao;
 import com.example.demo.domain.TaskNode;
+import com.example.demo.domain.support.ContainerInfo;
 import com.example.demo.domain.support.GeoInfoMeta;
+import com.example.demo.domain.support.TaskNodeAndContainerInfo;
 import com.example.demo.domain.support.TaskNodeStatusInfo;
 import com.example.demo.dto.taskNode.TaskNodeAddDTO;
 import com.example.demo.dto.taskNode.TaskNodeCalDTO;
@@ -138,17 +141,19 @@ public class TaskNodeService {
             taskNodeStatusInfo.setStatus(false);
         }else{
             JSONObject res = JSON.parseObject(result);
-            if(res.getIntValue("code") != 1){
+            if(res.getIntValue("code") == 1){
+                JSONObject data = res.getJSONObject("data");
+                taskNodeStatusInfo.setStatus(data.getBoolean("status"));
+                taskNodeStatusInfo.setRunning(data.getIntValue("running"));
+            }else{
                 taskNodeStatusInfo.setStatus(false);
             }
-            JSONObject data = res.getJSONObject("data");
-            taskNodeStatusInfo.setStatus(data.getBoolean("status"));
-            taskNodeStatusInfo.setRunning(data.getIntValue("running"));
+
         }
         return new AsyncResult<>(taskNodeStatusInfo);
     }
 
-    @Async
+    @Async("taskExecutor")
     public Future<TaskNodeStatusInfo> judgeTaskNodeAboutLocal(TaskNodeReceiveDTO taskNodeReceiveDTO){
         TaskNodeStatusInfo taskNodeStatusInfo = new TaskNodeStatusInfo();
         taskNodeStatusInfo.setId(taskNodeReceiveDTO.getId());
@@ -180,6 +185,50 @@ public class TaskNodeService {
             }
         }
         return new AsyncResult<>(taskNodeStatusInfo);
+    }
+
+    @Async
+    public Future<TaskNodeAndContainerInfo> judgeTaskNodeAndContainerByPid(TaskNodeReceiveDTO taskNodeReceiveDTO, String pid){
+        TaskNodeAndContainerInfo taskNodeAndContainerInfo = new TaskNodeAndContainerInfo();
+        taskNodeAndContainerInfo.setId(taskNodeReceiveDTO.getId());
+        taskNodeAndContainerInfo.setHost(taskNodeReceiveDTO.getHost());
+        taskNodeAndContainerInfo.setPort(taskNodeReceiveDTO.getPort());
+        //拼装向Task Server发起请求的url
+        String url = "http://" +  taskNodeReceiveDTO.getHost() + ":" + taskNodeReceiveDTO.getPort() + "/server/judgeStatus/" + pid;
+        String result;
+        try{
+            result = MyHttpUtils.GET(url, "UTF-8",null);
+        } catch (IOException e) {
+            e.printStackTrace();
+            result = null;
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            result = null;
+        }
+        if(result == null){
+            taskNodeAndContainerInfo.setStatus(false);
+        }else{
+            JSONObject res = JSON.parseObject(result);
+            if(res.getIntValue("code") == -1){
+                taskNodeAndContainerInfo.setStatus(false);
+            }else{
+                taskNodeAndContainerInfo.setStatus(true);
+                JSONObject data = res.getJSONObject("data");
+                List<ContainerInfo> containerInfos = new ArrayList<>();
+                JSONArray listArray = data.getJSONArray("containerInfos");
+                for(int i = 0; i < listArray.size(); i++){
+                    JSONObject temp = listArray.getJSONObject(i);
+                    ContainerInfo containerInfo = new ContainerInfo();
+                    containerInfo.setCount(temp.getIntValue("running"));
+                    containerInfo.setMac(temp.getString("mac"));
+                    containerInfo.setSid(temp.getString("sid"));
+                    containerInfo.setReliability(temp.getDoubleValue("reliability"));
+                    containerInfos.add(containerInfo);
+                }
+                taskNodeAndContainerInfo.setContainerInfos(containerInfos);
+            }
+        }
+        return new AsyncResult<>(taskNodeAndContainerInfo);
     }
 
 
@@ -223,6 +272,36 @@ public class TaskNodeService {
             geoInfoMeat.setLongitude(res.getString("lon"));
         }
         return geoInfoMeat;
+    }
+
+    @Async
+    public Future<List<JSONObject>> getAllServiceByTaskNode(TaskNodeReceiveDTO taskNodeReceiveDTO){
+
+        //测试用例url
+        String url = "http://" + taskNodeReceiveDTO.getHost() + ":" + taskNodeReceiveDTO.getPort() + "/server/modelPid/all";
+        String result;
+        try{
+            result = MyHttpUtils.GET(url, "UTF-8", null);
+        }catch (Exception e){
+            e.printStackTrace();
+            result = null;
+        }
+        if(result == null){
+            return null;
+        }else{
+            JSONObject res = JSON.parseObject(result);
+            if (res.getIntValue("code") != 1) {
+                return new AsyncResult<>(new ArrayList<>());
+            }
+            JSONArray services = res.getJSONArray("data");
+            List<JSONObject> array = new ArrayList<>();
+            for (int i = 0; i < services.size(); i++) {
+                JSONObject service = services.getJSONObject(i);
+                array.add(service);
+            }
+            return new AsyncResult<>(array);
+        }
+
     }
 
 }

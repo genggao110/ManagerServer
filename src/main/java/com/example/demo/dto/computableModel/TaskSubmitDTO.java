@@ -21,4 +21,6 @@ public class TaskSubmitDTO {
     String userName;
     @NotNull
     List<ExDataDTO> inputs;
+    @NotNull
+    List<OutputDataDTO> ouputs;
 }

@@ -28,8 +28,8 @@ public class DCData extends Service implements Data {
     public String getURL() {
         String dataId = this.getId();
 
-        String url = this.getBaseUrl() + "dataResource/getResource?sourceStoreId=" + dataId;
-
+        //String url = this.getBaseUrl() + "dataResource/getResource?sourceStoreId=" + dataId;
+        String url = this.getBaseUrl() + "data?uid=" + dataId;
         return url;
     }
 

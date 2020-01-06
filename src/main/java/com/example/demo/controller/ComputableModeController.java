@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.example.demo.bean.JsonResult;
+import com.example.demo.domain.support.TaskAndContainerReturnInfo;
 import com.example.demo.dto.computableModel.TaskResultDTO;
 import com.example.demo.dto.computableModel.TaskServiceDTO;
 import com.example.demo.dto.computableModel.TaskSubmitDTO;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * Created by wang ming on 2019/2/26.
@@ -42,8 +44,8 @@ public class ComputableModeController {
     @RequestMapping(value = "/uploadData", method = RequestMethod.POST)
     @ApiOperation(value = "上传模型运行数据")
     public JsonResult uploadData(UploadDataDTO uploadDataDTO){
-        MultipartFile file = uploadDataDTO.getFile();
-        if(!file.isEmpty()){
+        MultipartFile[] file = uploadDataDTO.getFile();
+        if(file.length > 0){
             return ResultUtils.success(computableService.uploadData(uploadDataDTO));
         }else{
             return ResultUtils.error(-1,"上传文件为空");
@@ -84,6 +86,13 @@ public class ComputableModeController {
     @ApiOperation(value = "根据pid来验证是否存在可用的地理模型服务")
     public JsonResult verifyTask(@PathVariable("pid") String pid){
         return ResultUtils.success(computableService.verifyTask(pid));
+    }
+
+    @RequestMapping(value = "/getAllTaskServerNode/{pid}", method = RequestMethod.GET)
+    @ApiOperation(value = "根据计算模型pid找到所有适合运行的计算资源节点(包含其所承载的task server信息)")
+    JsonResult getAllTaskServerNodeByPid(@PathVariable("pid") String pid){
+        List<TaskAndContainerReturnInfo> allTaskServerNodeByPid = computableService.getAllTaskServerNodeByPid(pid);
+        return ResultUtils.success(allTaskServerNodeByPid);
     }
 
 }

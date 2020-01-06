@@ -16,7 +16,7 @@ spring:
     static-locations: ["classpath:/META-INF/resources/", "classpath:/resources/", "classpath:/static/", "classpath:/public/"]
   data:
     mongodb:
-      uri: mongodb://222.192.7.75/Task
+      uri: mongodb://172.21.213.33/Task
   profiles:
     active: dev
   cache:
@@ -26,5 +26,10 @@ spring:
       max-file-size: 1000MB
       max-request-size: 1000MB
       location: E:/DemoData/
+  mvc:
+    static-path-pattern: /**
+
+prop:
+  upload-folder: D:/portal/DemoData/
 
 

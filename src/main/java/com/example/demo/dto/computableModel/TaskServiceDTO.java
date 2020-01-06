@@ -21,4 +21,5 @@ public class TaskServiceDTO {
     int ex_port;
     int type;
     List<ExDataDTO> inputs;
+    List<OutputDataDTO> outputs;
 }
